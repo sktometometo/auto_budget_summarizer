@@ -18,7 +18,7 @@ def plot_balance(
         key=lambda x: x[1],
     )
 
-    fig, ax = plt.subplots(figsize=(10, 8))
+    fig, ax = plt.subplots(figsize=(10, 15))
     for i in range(len(data_income)):
         ax.bar(0, data_income[i][1], bottom=sum([x[1] for x in data_income[:i]]))
         # text label
