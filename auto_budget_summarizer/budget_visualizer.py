@@ -85,8 +85,13 @@ def plot_credit_usage(
             )
     ax.set_xticks(range(len(categories)))
     ax.set_xticklabels(categories)
+    ax.set_ylabel("Amount (JPY)")
     if title:
         ax.set_title(title)
+    else:
+        earliest_date = min([entry[0] for entry in data_usage])
+        latest_date = max([entry[0] for entry in data_usage])
+        ax.set_title("Credit Usage from {} to {}".format(earliest_date, latest_date))
     if filename:
         plt.savefig(filename)
     else:
