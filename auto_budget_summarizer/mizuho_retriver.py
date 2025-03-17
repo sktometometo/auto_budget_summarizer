@@ -10,48 +10,12 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+from .utils import get_default_download_folder, get_latest_csv_file
+
 logger = logging.getLogger(__name__)
 
 
-def get_default_download_folder() -> Optional[str]:
-    """Get the default download folder."""
-    if os.name == "nt":  # Windows
-        import winreg
-
-        try:
-            key_path = (
-                r"Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders"
-            )
-            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path) as key:
-                download_folder, _ = winreg.QueryValueEx(
-                    key, "{374DE290-123F-4565-9164-39C4925E467B}"
-                )
-                return download_folder
-        except Exception as e:
-            logger.error(f"Error: {e}")
-            return None
-    elif os.name == "posix":  # Linux
-        return os.path.expanduser("~/Downloads")
-    else:
-        return None
-
-
-def get_latest_csv_file(download_folder: str):
-    """Get the latest CSV file in the download folder."""
-    csv_files = [
-        f
-        for f in os.listdir(download_folder)
-        if f.endswith(".csv") and os.path.isfile(os.path.join(download_folder, f))
-    ]
-    if not csv_files:
-        return None
-    latest_file = max(
-        csv_files, key=lambda f: os.path.getctime(os.path.join(download_folder, f))
-    )
-    return os.path.join(download_folder, latest_file)
-
-
-def download_csv_data(cust_no: str, password: str):
+def download_mizuho_log(cust_no: str, password: str):
     if os.name == "nt":  # Windows
         driver = webdriver.Edge()
     else:  # Linux
@@ -108,7 +72,7 @@ def download_csv_data(cust_no: str, password: str):
     return get_latest_csv_file(get_default_download_folder())
 
 
-def load_csv_data(file_path: str) -> Tuple[List[str], List[Tuple[str, int, str]]]:
+def load_mizuho_csv_data(file_path: str) -> Tuple[List[str], List[Tuple[str, int, str]]]:
     with open(file_path, "r", encoding="shift-jis") as f:
         reader = csv.reader(f)
         data = [row for row in reader]
@@ -127,7 +91,7 @@ def load_csv_data(file_path: str) -> Tuple[List[str], List[Tuple[str, int, str]]
     return metadata, [parse_log_entry(entry) for entry in log]
 
 
-def extract_log(
+def extract_mizuho_log(
     start_date: str, end_date: str, log_entries: List[Tuple[str, int, str]]
 ) -> List[Tuple[str, int, str]]:
     start_date = datetime.datetime.strptime(start_date, "%Y.%m.%d")

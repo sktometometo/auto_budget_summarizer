@@ -5,7 +5,13 @@ description = ""
 authors = [{ name = "Koki Shinjo", email = "sktometometo@gmail.com" }]
 readme = "README.md"
 requires-python = ">=3.8"
-dependencies = ["pywin32 (>=309,<310)", "matplotlib"]
+dependencies = [
+    "pywin32 (>=309,<310)",
+    "matplotlib",
+    "undetected-chromedriver",
+    "google-generativeai",
+    "pyyaml",
+]
 
 
 [build-system]
