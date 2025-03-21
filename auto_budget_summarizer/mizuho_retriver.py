@@ -2,9 +2,11 @@ import csv
 import datetime
 import logging
 import os
+import tempfile
 import time
 from typing import List, Optional, Tuple
 
+import undetected_chromedriver as uc
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -15,12 +17,28 @@ from .utils import get_default_download_folder, get_latest_csv_file
 logger = logging.getLogger(__name__)
 
 
-def download_mizuho_log(cust_no: str, password: str):
-    if os.name == "nt":  # Windows
-        driver = webdriver.Edge()
-    else:  # Linux
-        driver = webdriver.Firefox()
-    wait = WebDriverWait(driver, 10)
+def download_mizuho_log(
+    cust_no: str,
+    password: str,
+    headless: bool = False,
+    driver_wait_duration: float = 30.0,
+    wait_duration: float = 5.0,
+):
+    download_dir = tempfile.mkdtemp()
+    logger.info("Download directory: {}".format(download_dir))
+    options = uc.ChromeOptions()
+    prefs = {
+        "download.default_directory": download_dir,
+        # "download.prompt_for_download": False,
+        "download.directory_upgrade": True,
+        # "safebrowsing.enabled": True,
+    }
+    options.add_experimental_option("prefs", prefs)
+    if headless:
+        options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
+    driver = uc.Chrome(options=options)
+    wait = WebDriverWait(driver, driver_wait_duration)
     driver.get("https://web.ib.mizuhobank.co.jp/servlet/LOGBNK0000000B.do")
     # driver.find_element(By.NAME, "txbCustNo").send_keys(cust_no)
     element = wait.until(EC.presence_of_element_located((By.NAME, "txbCustNo")))
@@ -33,7 +51,7 @@ def download_mizuho_log(cust_no: str, password: str):
     element.send_keys(password)
     driver.find_element(By.CLASS_NAME, "btn-primary").click()
     #
-    deadline = time.time() + 5.0
+    deadline = time.time() + wait_duration
     while time.time() < deadline:
         if driver.page_source.find("重要なお知らせ") != -1:
             driver.find_element(By.CLASS_NAME, "btn-primary").click()
@@ -42,7 +60,7 @@ def download_mizuho_log(cust_no: str, password: str):
     ## Opened main page
     logger.warning("Opened main page")
 
-    time.sleep(5.0)
+    time.sleep(wait_duration)
     found = False
     for elem in driver.find_elements(By.CLASS_NAME, "lnk-text"):
         if (
@@ -56,7 +74,7 @@ def download_mizuho_log(cust_no: str, password: str):
         logger.error("Failed to find the see details link")
         return None
     ##
-    time.sleep(5.0)
+    time.sleep(wait_duration)
     found = False
     for elem in driver.find_elements(By.CLASS_NAME, "btn-mini"):
         if elem.text == "CSVダウンロード":
@@ -67,12 +85,14 @@ def download_mizuho_log(cust_no: str, password: str):
         logger.error("Failed to find the csv downloading link")
         return None
     ##
-    time.sleep(5.0)
+    time.sleep(wait_duration)
     driver.quit()
-    return get_latest_csv_file(get_default_download_folder())
+    return get_latest_csv_file([get_default_download_folder(), download_dir])
 
 
-def load_mizuho_csv_data(file_path: str) -> Tuple[List[str], List[Tuple[str, int, str]]]:
+def load_mizuho_csv_data(
+    file_path: str,
+) -> Tuple[List[str], List[Tuple[str, int, str]]]:
     with open(file_path, "r", encoding="shift-jis") as f:
         reader = csv.reader(f)
         data = [row for row in reader]

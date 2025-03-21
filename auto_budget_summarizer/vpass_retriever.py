@@ -2,6 +2,7 @@ import csv
 import datetime
 import logging
 import os
+import tempfile
 import time
 from typing import List, Optional, Tuple
 
@@ -19,10 +20,28 @@ from .utils import get_default_download_folder, get_latest_csv_file
 
 
 def download_vpass_log(
-    vpass_id: str, pw: str, target: Optional[str] = None
+    vpass_id: str,
+    pw: str,
+    target: Optional[str] = None,
+    headless: bool = False,
+    driver_wait_duration: float = 30.0,
+    wait_duration: float = 5.0,
 ) -> Optional[str]:
-    driver = uc.Chrome()
-    wait = WebDriverWait(driver, 10)
+    download_dir = tempfile.mkdtemp()
+    logger.info("Download directory: {}".format(download_dir))
+    options = uc.ChromeOptions()
+    prefs = {
+        "download.default_directory": download_dir,
+        # "download.prompt_for_download": False,
+        "download.directory_upgrade": True,
+        # "safebrowsing.enabled": True,
+    }
+    options.add_experimental_option("prefs", prefs)
+    if headless:
+        options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
+    driver = uc.Chrome(options=options)
+    wait = WebDriverWait(driver, driver_wait_duration)
     driver.get("https://www.smbc-card.com/mem/index.jsp")
 
     # Login
@@ -52,9 +71,9 @@ def download_vpass_log(
                 (By.NAME, "vp-view-VC0502-003_RS0001_U051111_3")
             )
         ).click()
-    time.sleep(3)
+    time.sleep(wait_duration)
     driver.quit()
-    return get_latest_csv_file(get_default_download_folder())
+    return get_latest_csv_file([get_default_download_folder(), download_dir])
 
 
 def load_vpass_csv_data(

@@ -10,8 +10,7 @@ def plot_balance(
     title: Optional[str] = None,
     filename: Optional[str] = None,
 ) -> None:
-
-    matplotlib.rc("font", family="MS Gothic")
+    import japanize_matplotlib
 
     data_income = sorted([entry for entry in data if entry[1] > 0], key=lambda x: x[1])
     data_expense = sorted(
@@ -55,7 +54,7 @@ def plot_credit_usage(
     title: Optional[str] = None,
     filename: Optional[str] = None,
 ):
-    matplotlib.rc("font", family="MS Gothic")
+    import japanize_matplotlib
 
     categories = sorted(list(set([entry[4] for entry in data_usage])))
 

@@ -9,6 +9,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from trio import current_time
 
 logger = logging.getLogger(__name__)
 
@@ -36,16 +37,29 @@ def get_default_download_folder() -> Optional[str]:
         return None
 
 
-def get_latest_csv_file(download_folder: str) -> Optional[str]:
+def get_latest_csv_file(
+    download_folders: List[str], threashod: float = 5.0
+) -> Optional[str]:
     """Get the latest CSV file in the download folder."""
-    csv_files = [
-        f
-        for f in os.listdir(download_folder)
-        if f.endswith(".csv") and os.path.isfile(os.path.join(download_folder, f))
-    ]
+    # csv_files = [
+    #     f
+    #     for f in os.listdir(download_folder)
+    #     if f.endswith(".csv") and os.path.isfile(os.path.join(download_folder, f))
+    # ]
+    csv_files = []
+    current_time = time.time()
+    for download_folder in download_folders:
+        csv_files.extend(
+            [
+                os.path.join(download_folder, f)
+                for f in os.listdir(download_folder)
+                if f.endswith(".csv")
+                and os.path.isfile(os.path.join(download_folder, f))
+            ]
+        )
+    # extract files that are created within the threshold
+    csv_files = [f for f in csv_files if current_time - os.path.getctime(f) < threashod]
     if not csv_files:
         return None
-    latest_file = max(
-        csv_files, key=lambda f: os.path.getctime(os.path.join(download_folder, f))
-    )
-    return os.path.join(download_folder, latest_file)
+    latest_file = max(csv_files, key=lambda f: os.path.getctime(f))
+    return latest_file
