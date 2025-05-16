@@ -1,6 +1,6 @@
 import argparse
 import logging
-
+import datetime
 import yaml
 
 from auto_budget_summarizer.budget_visualizer import *
@@ -83,6 +83,14 @@ def main():
 
     for entry in config:
         if entry["type"] == "mizuho":
+            start_date = entry.get("start_date")
+            if start_date is None:
+                start_date = (datetime.datetime.now() - datetime.timedelta(days=30)).strftime(
+                    "%Y.%m.%d"
+                )
+            end_date = entry.get("end_date")
+            if end_date is None:
+                end_date = datetime.datetime.now().strftime("%Y.%m.%d") 
             analyze_mizuho_balance(
                 entry["customer_id"],
                 entry["password"],
@@ -92,6 +100,9 @@ def main():
                 headless=args.headless,
             )
         elif entry["type"] == "vpass":
+            vpass_target = entry.get("vpass_target")
+            if vpass_target is None:
+                vpass_target = datetime.datetime.now().strftime("%Y%m")
             analyze_vpass_usage(
                 entry["vpass_id"],
                 entry["vpass_password"],
