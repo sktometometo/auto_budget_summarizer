@@ -94,8 +94,8 @@ def main():
             analyze_mizuho_balance(
                 entry["customer_id"],
                 entry["password"],
-                entry["start_date"],
-                entry["end_date"],
+                start_date,
+                end_date,
                 entry["filename"],
                 headless=args.headless,
             )
@@ -106,7 +106,7 @@ def main():
             analyze_vpass_usage(
                 entry["vpass_id"],
                 entry["vpass_password"],
-                entry["vpass_target"],
+                vpass_target,
                 entry["google_api_key"],
                 entry["filename"],
                 headless=args.headless,
