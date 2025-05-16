@@ -21,7 +21,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y curl jq
-     #     sudo apt-get install xvfb-utils
+          sudo apt-get install xvfb-utils
       - uses: browser-actions/setup-chrome@v1
         with:
           chrome-version: 120
@@ -35,7 +35,11 @@ jobs:
           echo "${{ secrets.TASK_YAML}}" > task.yaml
       - name: Run task
         run: |
-          python run_auto_budget_summarizer.py task.yaml
+          xvfb-run -s "-screen 0 1920x1080x24" python run_auto_budget_summarizer.py task.yaml
+      - name: list files
+        run: |
+          echo "List of files in the current directory:"
+          ls -al
       - name: Encode image to Base64
         id: base64_encode
         run: |
@@ -47,7 +51,6 @@ jobs:
             echo "Error: Image file not found at $IMAGE_PATH"
             exit 1
           fi
-
       - name: Send LINE message with image (Base64)
         env:
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
