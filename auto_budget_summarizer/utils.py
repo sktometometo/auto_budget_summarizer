@@ -49,6 +49,9 @@ def get_latest_csv_file(
     csv_files = []
     current_time = time.time()
     for download_folder in download_folders:
+        if not os.path.exists(download_folder):
+            logger.warning(f"Download folder {download_folder} does not exist.")
+            continue
         csv_files.extend(
             [
                 os.path.join(download_folder, f)
