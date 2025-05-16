@@ -1,0 +1,74 @@
+name: Send LINE Message with Image (Messaging API - Base64)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  send_line_message:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Set up necessary tools curl, jq, xvfb
+        run: |
+          sudo apt-get update && sudo apt upgrade
+          sudo apt-get install -y curl jq xvfb-utils
+      - uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: 120
+          install-chromedriver: true
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install-e .
+      - name: Echo task secret to yaml file
+        run: |
+          echo "${{ secrets.TASK_YAML}}" > task.yaml
+      - name: Run task
+        run: |
+          python run_auto_budget_summarizer.python task.yaml
+      - name: Encode image to Base64
+        id: base64_encode
+        run: |
+          IMAGE_PATH="path/to/your/image.png" # 送信する画像のパス
+          if [ -f "$IMAGE_PATH" ]; then
+            BASE64_STRING=$(base64 "$IMAGE_PATH" | tr -d '\n')
+            echo "BASE64_STRING=$BASE64_STRING" >> $GITHUB_OUTPUT
+          else
+            echo "Error: Image file not found at $IMAGE_PATH"
+            exit 1
+          fi
+
+      - name: Send LINE message with image (Base64)
+        env:
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+          RECIPIENT_ID: ${{ secrets.LINE_RECIPIENT_ID }} # 送信先のID (ユーザーID、グループIDなど)
+          BASE64_IMAGE: ${{ steps.base64_encode.outputs.BASE64_STRING }}
+          MESSAGE: 'GitHub Actionsからの画像です！ (Base64)'
+        run: |
+          curl -X POST -H "Authorization: Bearer $LINE_CHANNEL_ACCESS_TOKEN" \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "to": "'"$RECIPIENT_ID"'",
+              "messages": [
+                {
+                  "type": "image",
+                  "originalContentUrl": "data:image/png;base64,'"$BASE64_IMAGE"'",
+                  "previewImageUrl": "data:image/png;base64,'"$BASE64_IMAGE"'"
+                },
+                {
+                  "type": "text",
+                  "text": "'"$MESSAGE"'"
+                }
+              ]
+            }' \
+            https://api.line.me/v2/bot/message/push
+          echo "LINEメッセージを送信しました (Base64エンコード)"
