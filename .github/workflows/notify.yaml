@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install-e .
+          pip install -e .
       - name: Echo task secret to yaml file
         run: |
           echo "${{ secrets.TASK_YAML}}" > task.yaml
