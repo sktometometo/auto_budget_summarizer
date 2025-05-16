@@ -35,7 +35,7 @@ jobs:
           echo "${{ secrets.TASK_YAML}}" > task.yaml
       - name: Run task
         run: |
-          python run_auto_budget_summarizer.python task.yaml
+          python run_auto_budget_summarizer.py task.yaml
       - name: Encode image to Base64
         id: base64_encode
         run: |
