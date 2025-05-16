@@ -44,7 +44,7 @@ jobs:
       - name: Encode image to Base64
         id: base64_encode
         run: |
-          IMAGE_PATH="path/to/your/image.png" # 送信する画像のパス
+          IMAGE_PATH="vpass_viz.png" # 送信する画像のパス
           if [ -f "$IMAGE_PATH" ]; then
             BASE64_STRING=$(base64 "$IMAGE_PATH" | tr -d '\n')
             echo "BASE64_STRING=$BASE64_STRING" >> $GITHUB_OUTPUT
