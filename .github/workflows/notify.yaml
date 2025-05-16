@@ -21,7 +21,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y curl jq
-          sudo apt-get install xvfb-utils
+          sudo apt-get install -y xvfb
       - uses: browser-actions/setup-chrome@v1
         with:
           chrome-version: 120
